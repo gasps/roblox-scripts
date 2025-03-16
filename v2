@@ -1,0 +1,214 @@
+loadstring(game:HttpGet('https://raw.githubusercontent.com/gasps/roblox-scripts/refs/heads/main/fallen_anticheat.lua'))()
+
+print("loaded v2")
+
+if not LPH_OBFUSCATED then
+    function LPH_NO_VIRTUALIZE(f)
+        return function(...) return nil end
+    end
+    function LPH_JIT(...)
+        return nil
+    end
+    function LPH_JIT_MAX(...)
+        return nil
+    end
+    function LPH_NO_UPVALUES(f)
+        return function(...) return nil end
+    end
+    function LPH_ENCSTR(...)
+        return nil
+    end
+    function LPH_ENCNUM(...)
+        return nil
+    end
+    function LPH_CRASH()
+        return nil
+    end
+end
+
+repeat
+    task.wait()
+until game:IsLoaded()
+
+print("bet")
+
+local clone_reference = cloneref or function(...) 
+    return nil 
+end
+
+local players = clone_reference(game:GetService("Players"))
+local run_service = clone_reference(game:GetService("RunService"))
+local replicated_storage = clone_reference(game:GetService("ReplicatedStorage"))
+local user_input_service = clone_reference(game:GetService("UserInputService"))
+local lighting = clone_reference(game:GetService("Lighting"))
+local core_gui = clone_reference(game:GetService("CoreGui"))
+local http_service = clone_reference(game:GetService("HttpService"))
+
+local local_player = players and players.LocalPlayer or nil
+
+if game.PlaceId == 10228136016 then
+    print("idiot")
+    return local_player and local_player:Kick("execute ingame")
+end
+
+local exploit_functions = {
+    ["cloneref"] = cloneref or nil,
+    ["listfiles"] = listfiles or nil,
+    ["Drawing"] = Drawing or nil,
+    ["sethiddenproperty"] = sethiddenproperty or nil,
+    ["run_on_actor"] = run_on_actor or nil,
+    ["getactors"] = getactors or nil,
+    ["gethui"] = gethui or nil,
+    ["getcallingscript"] = getcallingscript or nil,
+    ["hookfunction"] = hookfunction or nil,
+    ["isfunctionhooked"] = isfunctionhooked or nil,
+    ["create_comm_channel"] = create_comm_channel or nil,
+}
+
+print("checking func")
+
+for i, v in pairs(exploit_functions) do
+    if not v then
+        print(string.format("[ERROR] Unsupported exploit function missing: %s", i))
+        return local_player and local_player:Kick(string.format("unsupported exploit! [%s]", i))
+    else
+        print(string.format("[DEBUG] Exploit function available: %s", i))
+    end
+end
+
+local function neutral_function(...)
+    return nil
+end
+
+xpcall(function()
+    local done = false
+    local id, channel = create_comm_channel()
+    
+    if channel then
+        print("com channel created")
+        channel.Event:Connect(function()
+            done = true
+            print("com channel event triggered")
+        end)
+    else
+        print("fucking failure to com channel")
+    end
+
+    local module_bypassed = false
+    local offsets = {
+        [76] = function(func)
+            print("raping com function at offset 76.")
+            hookfunction(func, neutral_function)
+            module_bypassed = true
+        end,
+    }
+
+    print("scanning the fucking global functions...")
+
+    for _, func in pairs(getgc(false) or {}) do
+        if type(func) ~= "function" or isexecutorclosure(func) then
+            continue
+        end
+
+        local info = debug.getinfo(func)
+        if info and not info.source:find("Modules.VectorUtil") then
+            continue
+        end
+
+        if isfunctionhooked(func) then
+            print("already fucking raped lets go")
+            continue
+        end
+
+        local current_offset = offsets[info.currentline]
+        if current_offset then
+            print(string.format("raping function at line: %d", info.currentline))
+            xpcall(current_offset, function(err)
+                print("raping failed: " .. tostring(err))
+            end, func)
+        end
+    end
+
+    if not module_bypassed then
+        print("raping not bypassed, kicking player.")
+        return local_player and local_player:Kick("PATCHED!")
+    else
+        print("module ez byp@sss")
+    end
+
+    repeat
+        task.wait()
+    until done
+    print("com channel closed")
+
+end, function(err)
+    print("WERE GOING DOWN CRITICAL ERROR! " .. tostring(err))
+    if local_player then
+        local_player:Kick(err)
+    end
+end)
+
+local required_modules = {
+    "VMs", "Modules", "VFXModule", "SoundModule", "RaycastUtil", "SettingsModule"
+}
+
+print("you better fucking have these or your not going anywhere..")
+
+for _, module_name in pairs(required_modules) do
+    if not replicated_storage:FindFirstChild(module_name) then
+        print(string.format("dumbass, get these modules %s", module_name))
+        return local_player and local_player:Kick("missing " .. module_name)
+    else
+        print(string.format("fucking found these shits for you, %s", module_name))
+    end
+end
+
+local function neutralize_services()
+    return {
+        nodes = nil,
+        military = nil,
+        drops = nil,
+        plants = nil,
+        vfx_folder = nil,
+        bases = nil,
+        animals = nil,
+        terrain = nil,
+        events = nil
+    }
+end
+
+local services = neutralize_services()
+
+if not services then
+    print("services missing dumbass")
+    return local_player and local_player:Kick("services missing")
+else
+    print("services raped successfully :)")
+end
+
+local cframe_look_at = CFrame.lookAt
+local camera = workspace and workspace.CurrentCamera or nil
+
+local bindable_event = {
+    Functions = {},
+    Event = {
+        Connect = function(_, callback)
+            table.insert(bindable_event.Functions, callback)
+            print("we just binded our event???")
+        end
+    }
+}
+
+bindable_event.Fire = function(_, ...)
+    for _, func in ipairs(bindable_event.Functions) do
+        func(...)
+        print("i think this worked!")
+    end
+end
+
+local mouse_location = user_input_service and user_input_service:GetMouseLocation() or nil
+local current_target = nil
+
+local start_tick = tick()
+
+print("ez bypass no worriing")
